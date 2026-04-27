@@ -1,0 +1,25 @@
+{
+  "users": {
+    "bessingerbackup2024@gmail.com": {
+      "role": "ADMIN",
+      "library_access": true,
+      "vaults": [
+        "VAULT1",
+        "VAULT2",
+        "VAULT3"
+      ],
+      "last_page_visited": "*"
+    },
+
+    "lastwarners2024@gmail.com": {
+      "role": "ADMIN",
+      "library_access": true,
+      "vaults": [
+        "VAULT1",
+        "VAULT2",
+        "VAULT3"
+      ],
+      "last_page_visited": "*"
+    }
+  }
+}
