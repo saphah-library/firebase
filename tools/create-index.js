@@ -2,14 +2,25 @@ const fs = require("fs");
 const path = require("path");
 
 const ROOT = path.join(__dirname, "..");
-const OUTPUT_YML = path.join(ROOT, "_data", "index.yml");
-const OUTPUT_JSON = path.join(ROOT, "_data", "index.json");
+const DATA_ROOT = path.join(ROOT, "_data");
 
-const TARGET_FOLDERS = ["library", "vault"];
+const OUTPUT_YML = path.join(DATA_ROOT, "index.yml");
+const OUTPUT_JSON = path.join(DATA_ROOT, "index.json");
 
 /**
- * Extract: first non-empty line AFTER second "---"
- * keeps "TITLE: ...."
+ * All indexed sources (RELATIVE to _data/)
+ */
+const TARGET_FOLDERS = [
+  { folder: "library", vault: "library" },
+  { folder: "main", vault: "vault" },
+  { folder: "vault1", vault: "vault" },
+  { folder: "vault2", vault: "vault" },
+  { folder: "vault3", vault: "vault" }
+];
+
+/**
+ * Extract TITLE line AFTER second '---'
+ * Keeps full line including "TITLE:"
  */
 function extractTitle(lines) {
   let dashCount = 0;
@@ -29,24 +40,31 @@ function extractTitle(lines) {
 }
 
 /**
- * Determine sub-vault safely:
- * library/dom/LIB-001.md → dom
- * vault/vault1/LIB-999.md → vault1
+ * Safe sub-vault detection:
+ * firebase/_data/library/dom/LIB-001.md → dom
+ * firebase/_data/vault1/x/LIB-001.md → x
+ * firebase/_data/main/LIB-001.md → main
  */
-function getSubVault(filePath, vaultRoot) {
-  const relative = path.relative(path.join(ROOT, vaultRoot), filePath);
+function getSubVault(filePath, baseFolder) {
+  const relative = path.relative(path.join(DATA_ROOT, baseFolder), filePath);
   const parts = relative.split(path.sep);
-  return parts.length > 1 ? parts[0] : "main";
+
+  // If file is directly inside folder
+  if (parts.length === 1) return baseFolder;
+
+  return parts[0];
 }
 
+/**
+ * Scan a single markdown file
+ */
 function scanFile(filePath, vault, subVault, fileName) {
   const content = fs.readFileSync(filePath, "utf8");
   const lines = content.split(/\r?\n/);
 
   const title = extractTitle(lines);
 
-  // FIXED URL (clean GitHub Pages structure)
-  const url = `https://saphah-library.github.io/firebase/${vault}/${subVault}/${fileName}`;
+  const url = `https://saphah-library.github.io/firebase/_data/${vault}/${subVault}/${fileName}`;
 
   return {
     vault,
@@ -57,8 +75,16 @@ function scanFile(filePath, vault, subVault, fileName) {
   };
 }
 
+/**
+ * Recursively walk folder safely
+ */
 function walk(dir, vault) {
   let results = [];
+
+  if (!fs.existsSync(dir)) {
+    console.log("SKIP (missing folder):", dir);
+    return results;
+  }
 
   const entries = fs.readdirSync(dir, { withFileTypes: true });
 
@@ -68,7 +94,7 @@ function walk(dir, vault) {
     if (entry.isDirectory()) {
       results = results.concat(walk(full, vault));
     } else if (entry.name.endsWith(".md")) {
-      const subVault = getSubVault(full, vault);
+      const subVault = getSubVault(full, path.basename(dir));
       results.push(scanFile(full, vault, subVault, entry.name));
     }
   }
@@ -76,22 +102,28 @@ function walk(dir, vault) {
   return results;
 }
 
+/**
+ * MAIN
+ */
 function main() {
   console.log("=== SAPHAH LIBRARY INDEX BUILDER START ===");
 
   let all = [];
 
-  for (const vault of TARGET_FOLDERS) {
-    const folder = path.join(ROOT, vault);
-    console.log("Scanning:", folder);
-    all = all.concat(walk(folder, vault));
+  for (const item of TARGET_FOLDERS) {
+    const folderPath = path.join(DATA_ROOT, item.folder);
+
+    console.log("Scanning:", folderPath);
+
+    const results = walk(folderPath, item.vault);
+    all = all.concat(results);
   }
 
-  // sort BEFORE writing
+  // SORT
   all.sort((a, b) => a.title.localeCompare(b.title));
 
-  // YAML output
-  const yml = all.map(item => `
+  // YAML output (pipeline-friendly)
+  const yaml = all.map(item => `
 - vault: ${item.vault}
   sub_vault: ${item.sub_vault}
   file: ${item.file}
@@ -99,14 +131,15 @@ function main() {
   url: ${item.url}
 `).join("\n");
 
-  fs.writeFileSync(OUTPUT_YML, yml, "utf8");
+  fs.writeFileSync(OUTPUT_YML, yaml, "utf8");
 
-  // JSON output
+  // JSON output (frontend-friendly)
   fs.writeFileSync(OUTPUT_JSON, JSON.stringify(all, null, 2), "utf8");
 
   console.log("INDEX GENERATED:");
   console.log("- YAML:", OUTPUT_YML);
   console.log("- JSON:", OUTPUT_JSON);
+  console.log("TOTAL FILES:", all.length);
   console.log("=== COMPLETE ===");
 }
 
