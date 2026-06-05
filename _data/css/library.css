@@ -1,0 +1,20 @@
+/* LIBRARY VIEW */
+
+.library-header {
+  border-left: 4px solid #00ff88;
+  padding-left: 10px;
+}
+
+.library-card {
+  background: #0e1512;
+  border: 1px solid #1e2a23;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+}
+
+.library-card:hover {
+  border-color: #00ff88;
+  transform: translateX(2px);
+  transition: 0.2s ease;
+}
