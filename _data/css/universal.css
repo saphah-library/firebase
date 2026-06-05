@@ -1,0 +1,23 @@
+/* UNIVERSAL OVERRIDES */
+
+.hidden {
+  display: none;
+}
+
+.center {
+  text-align: center;
+}
+
+.small {
+  font-size: 12px;
+  opacity: 0.8;
+}
+
+.link {
+  color: #00ff88;
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
