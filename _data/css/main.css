@@ -1,0 +1,20 @@
+/* MAIN VAULT */
+
+.main-header {
+  border-left: 4px solid #66aaff;
+  padding-left: 10px;
+}
+
+.main-card {
+  background: #0d0f14;
+  border: 1px solid #1a2230;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+}
+
+.main-card:hover {
+  border-color: #66aaff;
+  transform: translateY(-1px);
+  transition: 0.2s ease;
+}
