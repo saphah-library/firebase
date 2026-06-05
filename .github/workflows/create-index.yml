@@ -22,14 +22,13 @@ jobs:
       - name: Run Index Builder
         run: node tools/create-index.js
 
-      - name: Commit index files
+      - name: Commit index + state files
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          # ✅ FIXED PATHS (NO firebase/ PREFIX)
-          git add _data/index.yml _data/index.json
+          git add _data/index.yml _data/index.json _data/librarian_state.json
 
-          git commit -m "AUTO: update index" || echo "No changes to commit"
+          git commit -m "AUTO: update index + state" || echo "No changes to commit"
 
           git push
