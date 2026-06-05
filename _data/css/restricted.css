@@ -1,0 +1,20 @@
+/* RESTRICTED ACCESS */
+
+body {
+  background: #120000;
+  color: #ff6666;
+}
+
+.restricted-banner {
+  background: #2a0000;
+  border: 1px solid #ff3333;
+  padding: 10px;
+  margin-bottom: 15px;
+  font-weight: bold;
+}
+
+.restricted-card {
+  border: 1px solid #ff3333;
+  background: #1a0000;
+  padding: 12px;
+}
