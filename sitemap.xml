@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+
+    <!-- LIBRARY (PUBLIC LAYER) -->
+    <url>
+        <loc>https://saphah-library.github.io/firebase/_data/library/</loc>
+    </url>
+
+    <!-- MAIN VAULT (PUBLIC / SEMI-OPEN LAYER) -->
+    <url>
+        <loc>https://saphah-library.github.io/firebase/_data/main/</loc>
+    </url>
+
+    <!-- OPTIONAL: IF YOU HAVE INDEX ENTRY PAGES -->
+    <url>
+        <loc>https://saphah-library.github.io/firebase/library/</loc>
+    </url>
+
+    <url>
+        <loc>https://saphah-library.github.io/firebase/main/</loc>
+    </url>
+
+</urlset>
