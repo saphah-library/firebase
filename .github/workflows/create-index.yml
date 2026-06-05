@@ -1,31 +1,27 @@
-name: Create Library Index
+name: Create Index Files
 
 on:
   workflow_dispatch:
-  push:
-    paths:
-      - "firebase/_data/**"
 
 jobs:
-  build-index:
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Run Index Builder (Phase 1 + 2)
-        run: node tools/create-index.js
+      - name: Run Index Builder
+        run: node firebase/tools/create-index.js
 
-      - name: Commit updated index files
+      - name: Commit changes
         run: |
-          git config user.name "index-bot"
-          git config user.email "index-bot@users.noreply.github.com"
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
           git add firebase/_data/index.yml firebase/_data/index.json
-          git commit -m "AUTO: update library/vault index" || echo "No changes"
+          git commit -m "Update library/vault index" || echo "No changes"
           git push
