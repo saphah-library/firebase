@@ -1,0 +1,18 @@
+/* VAULT 2 */
+
+.vault2-header {
+  border-left: 4px solid #55aaff;
+  padding-left: 10px;
+}
+
+.vault2-card {
+  background: #0d1114;
+  border: 1px solid #1e2833;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+}
+
+.vault2-card:hover {
+  border-color: #55aaff;
+}
