@@ -1,0 +1,17 @@
+/* PUBLIC VIEW */
+
+body {
+  background: #0b0f0c;
+  color: #c8ffd6;
+}
+
+.public-card {
+  background: #111815;
+  border: 1px solid #1e2a23;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.public-card:hover {
+  border-color: #00ff88;
+}
