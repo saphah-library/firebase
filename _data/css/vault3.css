@@ -1,0 +1,18 @@
+/* VAULT 3 */
+
+.vault3-header {
+  border-left: 4px solid #aa55ff;
+  padding-left: 10px;
+}
+
+.vault3-card {
+  background: #120d14;
+  border: 1px solid #2a1e33;
+  padding: 12px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+}
+
+.vault3-card:hover {
+  border-color: #aa55ff;
+}
