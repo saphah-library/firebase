@@ -1,0 +1,20 @@
+User-agent: *
+Disallow: /firebase/_data/vault1/
+Disallow: /firebase/_data/vault2/
+Disallow: /firebase/_data/vault3/
+Disallow: /firebase/_data/librarian/
+Disallow: /firebase/_data/support/
+Disallow: /firebase/_data/access.json
+Disallow: /firebase/_data/index.json
+Disallow: /firebase/_data/index.yml
+
+Allow: /firebase/_data/library/
+Allow: /firebase/_data/main/
+
+# Prevent indexing of system and control layers
+Disallow: /firebase/console/
+Disallow: /firebase/tools/
+Disallow: /*.json$
+Disallow: /*.yml$
+
+Sitemap: https://saphah-library.github.io/firebase/sitemap.xml
