@@ -3,12 +3,16 @@ name: Create Index Files
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -16,12 +20,15 @@ jobs:
           node-version: 20
 
       - name: Run Index Builder
-        run: node firebase/tools/create-index.js
+        run: node tools/create-index.js
 
-      - name: Commit changes
+      - name: Commit index files
         run: |
-          git config user.name "github-actions"
-          git config user.email "github-actions@github.com"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
           git add firebase/_data/index.yml firebase/_data/index.json
-          git commit -m "Update library/vault index" || echo "No changes"
+
+          git commit -m "AUTO: update index" || echo "No changes to commit"
+
           git push
