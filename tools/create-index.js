@@ -5,25 +5,38 @@ const ROOT = path.join(__dirname, "..");
 const OUTPUT_YML = path.join(ROOT, "_data", "index.yml");
 const OUTPUT_JSON = path.join(ROOT, "_data", "index.json");
 
-// scan folders
 const TARGET_FOLDERS = ["library", "vault"];
 
+/**
+ * Extract: first non-empty line AFTER second "---"
+ * keeps "TITLE: ...."
+ */
 function extractTitle(lines) {
   let dashCount = 0;
 
   for (let i = 0; i < lines.length; i++) {
     if (lines[i].trim() === "---") dashCount++;
 
-    // AFTER second ---
     if (dashCount === 2) {
       for (let j = i + 1; j < lines.length; j++) {
         const line = lines[j].trim();
-        if (line.length > 0) return line; // KEEP FULL "TITLE: ..."
+        if (line.length > 0) return line;
       }
     }
   }
 
   return "TITLE: UNKNOWN";
+}
+
+/**
+ * Determine sub-vault safely:
+ * library/dom/LIB-001.md → dom
+ * vault/vault1/LIB-999.md → vault1
+ */
+function getSubVault(filePath, vaultRoot) {
+  const relative = path.relative(path.join(ROOT, vaultRoot), filePath);
+  const parts = relative.split(path.sep);
+  return parts.length > 1 ? parts[0] : "main";
 }
 
 function scanFile(filePath, vault, subVault, fileName) {
@@ -32,7 +45,8 @@ function scanFile(filePath, vault, subVault, fileName) {
 
   const title = extractTitle(lines);
 
-  const url = `https://saphah-library.github.io/firebase/_data/${vault}/${subVault}/${fileName}`;
+  // FIXED URL (clean GitHub Pages structure)
+  const url = `https://saphah-library.github.io/firebase/${vault}/${subVault}/${fileName}`;
 
   return {
     vault,
@@ -54,7 +68,7 @@ function walk(dir, vault) {
     if (entry.isDirectory()) {
       results = results.concat(walk(full, vault));
     } else if (entry.name.endsWith(".md")) {
-      const subVault = path.basename(path.dirname(full));
+      const subVault = getSubVault(full, vault);
       results.push(scanFile(full, vault, subVault, entry.name));
     }
   }
@@ -73,8 +87,11 @@ function main() {
     all = all.concat(walk(folder, vault));
   }
 
-  // write YAML
-  let yml = all.map(item => `
+  // sort BEFORE writing
+  all.sort((a, b) => a.title.localeCompare(b.title));
+
+  // YAML output
+  const yml = all.map(item => `
 - vault: ${item.vault}
   sub_vault: ${item.sub_vault}
   file: ${item.file}
@@ -84,9 +101,8 @@ function main() {
 
   fs.writeFileSync(OUTPUT_YML, yml, "utf8");
 
-  // write JSON (sorted)
-  const json = all.sort((a, b) => a.title.localeCompare(b.title));
-  fs.writeFileSync(OUTPUT_JSON, JSON.stringify(json, null, 2), "utf8");
+  // JSON output
+  fs.writeFileSync(OUTPUT_JSON, JSON.stringify(all, null, 2), "utf8");
 
   console.log("INDEX GENERATED:");
   console.log("- YAML:", OUTPUT_YML);
