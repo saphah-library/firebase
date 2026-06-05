@@ -6,7 +6,6 @@ const DATA_ROOT = path.join(ROOT, "_data");
 
 const OUTPUT_YML = path.join(DATA_ROOT, "index.yml");
 const OUTPUT_JSON = path.join(DATA_ROOT, "index.json");
-
 const STATE_FILE = path.join(DATA_ROOT, "librarian_state.json");
 
 const TARGET_FOLDERS = [
@@ -17,7 +16,25 @@ const TARGET_FOLDERS = [
   { folder: "vault3", vault: "vault" }
 ];
 
-/* ---------------- TITLE EXTRACTION ---------------- */
+/* ---------------- STATE ---------------- */
+function loadState() {
+  if (!fs.existsSync(STATE_FILE)) {
+    return {
+      version: 1,
+      created: new Date().toISOString(),
+      last_run: null,
+      indexed: {}
+    };
+  }
+
+  return JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
+}
+
+function saveState(state) {
+  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+}
+
+/* ---------------- TITLE ---------------- */
 function extractTitle(lines) {
   let dashCount = 0;
 
@@ -35,19 +52,7 @@ function extractTitle(lines) {
   return "TITLE: UNKNOWN";
 }
 
-/* ---------------- STATE ---------------- */
-function loadState() {
-  if (!fs.existsSync(STATE_FILE)) {
-    return { indexed: {} };
-  }
-  return JSON.parse(fs.readFileSync(STATE_FILE, "utf8"));
-}
-
-function saveState(state) {
-  fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
-}
-
-/* ---------------- FILE ID ---------------- */
+/* ---------------- KEY ---------------- */
 function makeKey(vault, subVault, file) {
   return `${vault}/${subVault}/${file}`;
 }
@@ -61,7 +66,7 @@ function getSubVault(filePath, baseFolder) {
   return parts[0];
 }
 
-/* ---------------- SCAN FILE ---------------- */
+/* ---------------- SCAN ---------------- */
 function scanFile(filePath, vault, subVault, fileName) {
   const content = fs.readFileSync(filePath, "utf8");
   const lines = content.split(/\r?\n/);
@@ -97,8 +102,8 @@ function walk(dir, vault, existingSet, newItems) {
       if (existingSet.has(key)) continue;
 
       const item = scanFile(full, vault, subVault, entry.name);
+      item._key = key;
 
-      item._key = key; // internal tracking
       newItems.push(item);
     }
   }
@@ -112,20 +117,19 @@ function main() {
   let existingSet = new Set(Object.keys(state.indexed || {}));
 
   let newItems = [];
+
+  // existing index
   let allItems = Object.values(state.indexed || {});
 
-  // scan all sources
   for (const item of TARGET_FOLDERS) {
     const folderPath = path.join(DATA_ROOT, item.folder);
-
     console.log("Scanning:", folderPath);
-
     walk(folderPath, item.vault, existingSet, newItems);
   }
 
   console.log("NEW FILES FOUND:", newItems.length);
 
-  /* ---------------- UPDATE STATE ---------------- */
+  // update state
   for (const item of newItems) {
     state.indexed[item._key] = {
       vault: item.vault,
@@ -136,18 +140,21 @@ function main() {
     };
   }
 
+  // 🔥 IMPORTANT ADDITION
+  state.last_run = new Date().toISOString();
+
   saveState(state);
 
-  /* ---------------- MERGE ---------------- */
+  // rebuild full dataset
   allItems = Object.values(state.indexed);
 
-  /* ---------------- SORT JSON ---------------- */
   allItems.sort((a, b) => a.title.localeCompare(b.title));
 
   fs.writeFileSync(OUTPUT_JSON, JSON.stringify(allItems, null, 2));
 
-  /* ---------------- APPEND YAML ONLY FOR NEW ITEMS ---------------- */
-  const yamlAppend = newItems.map(item => `
+  // append YAML only for new
+  if (newItems.length > 0) {
+    const yamlAppend = newItems.map(item => `
 - vault: ${item.vault}
   sub_vault: ${item.sub_vault}
   file: ${item.file}
@@ -155,13 +162,12 @@ function main() {
   url: ${item.url}
 `).join("\n");
 
-  if (newItems.length > 0) {
     fs.appendFileSync(OUTPUT_YML, "\n" + yamlAppend);
   }
 
-  console.log("INDEX UPDATED:");
-  console.log("- New YAML entries:", newItems.length);
-  console.log("- Total indexed:", allItems.length);
+  console.log("STATE UPDATED + INDEX REBUILT");
+  console.log("LAST RUN:", state.last_run);
+  console.log("TOTAL FILES:", allItems.length);
   console.log("=== COMPLETE ===");
 }
 
